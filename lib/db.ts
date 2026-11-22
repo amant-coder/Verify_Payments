@@ -40,10 +40,11 @@ try {
         }),
       });
     }
-    firestoreDb = admin.firestore();
+    const dbInstance = admin.firestore();
     try {
-      firestoreDb.settings({ ignoreUndefinedProperties: true });
+      dbInstance.settings({ ignoreUndefinedProperties: true });
     } catch {}
+    firestoreDb = dbInstance;
     console.log("[DB] Initialized with real Firebase Firestore.");
   } else {
     lastInitError = "Missing or placeholder Firebase keys in environment (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, or FIREBASE_PRIVATE_KEY)";
