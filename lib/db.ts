@@ -26,6 +26,8 @@ const hasConfiguredKeys = Boolean(
   process.env.FIREBASE_PRIVATE_KEY && !isPlaceholder(process.env.FIREBASE_PRIVATE_KEY)
 );
 
+let lastInitError: string | null = null;
+
 try {
   if (hasConfiguredKeys) {
     const admin = require("firebase-admin");
@@ -41,15 +43,25 @@ try {
     firestoreDb = admin.firestore();
     console.log("[DB] Initialized with real Firebase Firestore.");
   } else {
+    lastInitError = "Missing or placeholder Firebase keys in environment (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, or FIREBASE_PRIVATE_KEY)";
     console.info("[DB] Running with high-performance In-Memory repository (Firebase credentials not configured or incomplete).");
   }
-} catch (err) {
+} catch (err: any) {
+  lastInitError = err?.message || String(err);
   console.warn("[DB] Firebase Admin init failed, falling back to in-memory store:", err);
   firestoreDb = null;
 }
 
 export function isFirestoreConnected(): boolean {
   return firestoreDb !== null;
+}
+
+export function getDbStatus() {
+  return {
+    isFirestore: firestoreDb !== null,
+    hasConfiguredKeys,
+    error: lastInitError,
+  };
 }
 
 const ORDERS_COLLECTION = "orders";
