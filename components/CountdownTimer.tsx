@@ -21,16 +21,16 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
   const isStage2 = stage === "STAGE_2";
 
   return (
-    <div className="w-full bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+    <div className="w-full bg-white border border-slate-200 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-sm space-y-3 sm:space-y-4">
       {/* Header status badge */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5 sm:space-x-2">
           {isOverdue ? (
-            <AlertTriangle className="w-5 h-5 text-amber-500 animate-pulse-subtle" />
+            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 animate-pulse-subtle shrink-0" />
           ) : (
-            <Clock className="w-5 h-5 text-blue-600 animate-pulse-subtle" />
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 animate-pulse-subtle shrink-0" />
           )}
-          <span className="text-xs font-semibold tracking-wider uppercase text-slate-500">
+          <span className="text-[10px] sm:text-xs font-semibold tracking-wider uppercase text-slate-500">
             {isStage1
               ? "Verification Stage 1 of 2"
               : isStage2
@@ -40,7 +40,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
         </div>
 
         <span
-          className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium shrink-0 ${
             isOverdue
               ? "bg-amber-100 text-amber-800"
               : isStage2
@@ -53,12 +53,12 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
       </div>
 
       {/* Main Countdown Display */}
-      <div className="text-center py-2">
-        <div className="text-4xl font-extrabold tracking-tight font-mono text-slate-900">
+      <div className="text-center py-1 sm:py-2">
+        <div className="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono text-slate-900">
           {formattedTime}
         </div>
-        <h3 className="mt-2 text-base font-bold text-slate-800">{title}</h3>
-        <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
+        <h3 className="mt-1.5 sm:mt-2 text-sm sm:text-base font-bold text-slate-800">{title}</h3>
+        <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
           {subtitle}
         </p>
       </div>

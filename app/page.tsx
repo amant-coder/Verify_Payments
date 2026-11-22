@@ -53,19 +53,19 @@ export default function DemoStorefrontPage() {
   };
 
   return (
-    <div className="w-full max-w-lg space-y-6">
+    <div className="w-full max-w-lg space-y-4 sm:space-y-6 mx-auto">
       {/* Banner Card */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+      <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl space-y-5 sm:space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="w-10 h-10 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
+            <div className="w-10 h-10 bg-blue-600 text-white rounded-2xl flex items-center justify-center font-bold shadow-md shadow-blue-500/20 shrink-0">
               <Zap className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+              <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
                 UPI Minimal Checkout
               </h1>
-              <p className="text-xs text-slate-500">
+              <p className="text-[11px] sm:text-xs text-slate-500">
                 Automatic Return Detection & Telegram Approval
               </p>
             </div>
@@ -73,28 +73,29 @@ export default function DemoStorefrontPage() {
 
           <a
             href="/admin"
-            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-700 transition"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl text-xs font-semibold text-slate-700 transition shrink-0"
           >
-            
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+            <span>Admin</span>
           </a>
         </div>
 
         {/* Feature Highlights */}
-        <div className="grid grid-cols-3 gap-2 text-center text-[11px] text-slate-600 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-          <div className="space-y-1"> 
-            <Smartphone className="w-4 h-4 mx-auto text-blue-600" />
-            <span className="font-semibold block">Mobile Deep-Link</span>
-            <span className="text-[10px] text-slate-400">One-tap app launch</span>
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-[10px] sm:text-[11px] text-slate-600 bg-slate-50 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100">
+          <div className="space-y-0.5 sm:space-y-1"> 
+            <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto text-blue-600" />
+            <span className="font-semibold block truncate">Mobile Launch</span>
+            <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate">One-tap app</span>
           </div>
-          <div className="space-y-1 border-x border-slate-200">
-            <Zap className="w-4 h-4 mx-auto text-purple-600" />
-            <span className="font-semibold block">Auto Return</span>
-            <span className="text-[10px] text-slate-400">2m + 5m timers</span>
+          <div className="space-y-0.5 sm:space-y-1 border-x border-slate-200">
+            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto text-purple-600" />
+            <span className="font-semibold block truncate">Auto Return</span>
+            <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate">2m + 5m timers</span>
           </div>
-          <div className="space-y-1">
-            <Bot className="w-4 h-4 mx-auto text-emerald-600" />
-            <span className="font-semibold block">Telegram Bot</span>
-            <span className="text-[10px] text-slate-400">Instant approval</span>
+          <div className="space-y-0.5 sm:space-y-1">
+            <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto text-emerald-600" />
+            <span className="font-semibold block truncate">Telegram Bot</span>
+            <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate">Instant approve</span>
           </div>
         </div>
 
@@ -133,14 +134,14 @@ export default function DemoStorefrontPage() {
             </div>
 
             {/* Presets */}
-            <div className="flex items-center space-x-1.5 mt-2">
-              <span className="text-[10px] text-slate-400 font-medium">Quick:</span>
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+              <span className="text-[10px] text-slate-400 font-medium mr-0.5">Quick:</span>
               {presetAmounts.map((amt) => (
                 <button
                   type="button"
                   key={amt}
                   onClick={() => setAmountInput(String(amt))}
-                  className="px-2 py-0.5 text-xs bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-medium transition"
+                  className="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 active:scale-95 rounded-lg text-slate-700 font-medium transition"
                 >
                   ₹{amt}
                 </button>

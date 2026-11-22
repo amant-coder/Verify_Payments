@@ -11,22 +11,22 @@ export const RejectedView: React.FC<RejectedViewProps> = ({ order }) => {
   const formattedAmount = formatINR(order.amountPaise);
 
   return (
-    <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl text-center space-y-6">
+    <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xl text-center space-y-4 sm:space-y-6 mx-auto">
       {/* Rejected Icon */}
-      <div className="mx-auto w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center border border-red-100">
-        <XCircle className="w-10 h-10" />
+      <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center border border-red-100">
+        <XCircle className="w-8 h-8 sm:w-10 sm:h-10" />
       </div>
 
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
           Verification Declined
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-xs sm:text-sm text-slate-500">
           The merchant was unable to verify incoming credit for this transaction.
         </p>
       </div>
 
-      <div className="bg-red-50/70 border border-red-100 rounded-2xl p-4 text-xs text-red-800 space-y-1.5 text-left">
+      <div className="bg-red-50/70 border border-red-100 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-xs text-red-800 space-y-1.5 text-left">
         <p className="font-semibold">What happened?</p>
         <p>
           The payment could not be matched with our receiving bank records for Order{" "}

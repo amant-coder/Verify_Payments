@@ -41,17 +41,17 @@ export const VerificationView: React.FC<VerificationViewProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md space-y-4">
+    <div className="w-full max-w-md space-y-3 sm:space-y-4 mx-auto">
       {/* Top summary card */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+      <div className="bg-white border border-slate-200 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm flex items-center justify-between">
         <div>
           <span className="text-[10px] uppercase font-bold text-slate-400">Merchant</span>
-          <p className="text-xs font-semibold text-slate-800">{businessName}</p>
-          <p className="text-[11px] font-mono text-slate-500">Order: {order.orderId}</p>
+          <p className="text-xs sm:text-sm font-semibold text-slate-800">{businessName}</p>
+          <p className="text-[10px] sm:text-[11px] font-mono text-slate-500">Order: {order.orderId}</p>
         </div>
         <div className="text-right">
           <span className="text-[10px] uppercase font-bold text-slate-400">Payable</span>
-          <p className="text-base font-extrabold text-slate-900">
+          <p className="text-sm sm:text-base font-extrabold text-slate-900">
             {formatINR(order.amountPaise)}
           </p>
         </div>
@@ -61,15 +61,15 @@ export const VerificationView: React.FC<VerificationViewProps> = ({
       <CountdownTimer timerState={timerState} onRefreshStatus={onRefreshStatus} />
 
       {/* Optional UTR / Reference Input */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
+      <div className="bg-white border border-slate-200 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 shadow-sm space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-slate-800 flex items-center space-x-1.5">
-            <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+            <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span>Have a UPI Reference / UTR Number?</span>
           </span>
-          <span className="text-[10px] text-slate-400 font-medium">Optional</span>
+          <span className="text-[10px] text-slate-400 font-medium shrink-0 ml-1">Optional</span>
         </div>
-        <p className="text-[11px] text-slate-500 leading-tight">
+        <p className="text-[10px] sm:text-[11px] text-slate-500 leading-tight">
           Submitting your 12-digit bank UTR reference helps the merchant locate your credit faster.
           It does not interrupt the countdown.
         </p>
@@ -84,19 +84,19 @@ export const VerificationView: React.FC<VerificationViewProps> = ({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-2 pt-1">
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={utrInput}
                 onChange={(e) => setUtrInput(e.target.value)}
                 placeholder="e.g. 423456789012"
                 maxLength={24}
-                className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono tracking-wider"
+                className="w-full sm:flex-1 px-3 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono tracking-wider min-h-[42px]"
               />
               <button
                 type="submit"
                 disabled={isSubmitting || !utrInput.trim()}
-                className="px-3 py-2 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white rounded-xl text-xs font-semibold flex items-center space-x-1 disabled:opacity-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 disabled:opacity-50 transition min-h-[42px] shrink-0"
               >
                 <span>{isSubmitting ? "Saving..." : "Submit"}</span>
                 <Send className="w-3 h-3" />
@@ -108,7 +108,7 @@ export const VerificationView: React.FC<VerificationViewProps> = ({
       </div>
 
       {/* Safety Reassurance */}
-      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center space-x-2 text-[11px] text-slate-500">
+      <div className="bg-slate-50 border border-slate-100 rounded-xl sm:rounded-2xl p-3 flex items-center space-x-2 text-[10px] sm:text-[11px] text-slate-500">
         <Shield className="w-4 h-4 text-emerald-600 shrink-0" />
         <span>Your browser state is preserved. This page will update automatically.</span>
       </div>

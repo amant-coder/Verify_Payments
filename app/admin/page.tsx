@@ -137,9 +137,9 @@ export default function AdminDashboardPage() {
   }, [processedOrders, orders.length]);
 
   return (
-    <div className="w-full max-w-5xl space-y-6 py-6 px-4">
+    <div className="w-full max-w-5xl space-y-4 sm:space-y-6 py-4 sm:py-6 px-3 sm:px-4 mx-auto">
       {/* Dashboard Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 pb-4 sm:pb-5">
         <div>
           <div className="flex items-center space-x-2">
             <span className="text-xs uppercase tracking-wider font-semibold text-blue-600">
@@ -156,7 +156,7 @@ export default function AdminDashboardPage() {
               </span>
             )}
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5">
             UPI Payment Approvals & Audit
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -164,15 +164,15 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <div className={`flex items-center space-x-1.5 bg-white border rounded-xl px-3 py-1.5 text-xs shadow-sm transition ${
+        <div className="flex flex-wrap items-center gap-2">
+          <div className={`flex items-center space-x-1.5 bg-white border rounded-xl px-2.5 sm:px-3 py-1.5 text-xs shadow-sm transition ${
             isAuthValid === true
               ? "border-emerald-400 ring-2 ring-emerald-100"
               : isAuthValid === false
               ? "border-rose-400 ring-2 ring-rose-100"
               : "border-slate-300 focus-within:ring-2 focus-within:ring-blue-500"
           }`}>
-            <Key className={`w-3.5 h-3.5 ${isAuthValid === true ? "text-emerald-600" : isAuthValid === false ? "text-rose-500" : "text-slate-500"}`} />
+            <Key className={`w-3.5 h-3.5 shrink-0 ${isAuthValid === true ? "text-emerald-600" : isAuthValid === false ? "text-rose-500" : "text-slate-500"}`} />
             <input
               type="password"
               value={adminSecret}
@@ -183,31 +183,31 @@ export default function AdminDashboardPage() {
                 }
               }}
               placeholder="Admin Secret"
-              className="w-32 focus:outline-none text-xs font-mono"
+              className="w-24 sm:w-28 md:w-32 focus:outline-none text-xs font-mono"
               title="Enter your ADMIN_SECRET_KEY"
             />
             {isAuthValid === true && (
-              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                ✓ Valid
+              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded">
+                ✓
               </span>
             )}
             {isAuthValid === false && (
-              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
-                ✕ Invalid
+              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1 py-0.5 rounded">
+                ✕
               </span>
             )}
           </div>
 
           <button
             onClick={fetchOrders}
-            className="p-2 text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-xs font-medium flex items-center space-x-1 shadow-sm"
+            className="px-2.5 py-1.5 text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-xs font-medium flex items-center space-x-1 shadow-sm shrink-0 min-h-[34px]"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Refresh</span>
+            <span className="hidden xs:inline sm:inline">Refresh</span>
           </button>
           <a
             href="/"
-            className="px-3 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition"
+            className="px-3 py-1.5 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition shrink-0 min-h-[34px] flex items-center"
           >
             Storefront
           </a>
@@ -236,42 +236,42 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
+        <div className="bg-white border border-slate-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm">
           <span className="text-[10px] uppercase font-bold text-slate-400">Total Orders</span>
-          <p className="text-2xl font-extrabold text-slate-900 mt-1">{metrics.total}</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">{metrics.total}</p>
         </div>
 
-        <div className="bg-white border border-blue-200 rounded-2xl p-4 shadow-sm bg-blue-50/20">
+        <div className="bg-white border border-blue-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm bg-blue-50/20">
           <span className="text-[10px] uppercase font-bold text-blue-600">Active Review</span>
-          <p className="text-2xl font-extrabold text-blue-700 mt-1">{metrics.pending}</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-blue-700 mt-1">{metrics.pending}</p>
         </div>
 
-        <div className="bg-white border border-amber-200 rounded-2xl p-4 shadow-sm bg-amber-50/20">
+        <div className="bg-white border border-amber-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm bg-amber-50/20">
           <span className="text-[10px] uppercase font-bold text-amber-600">Overdue (&gt;7m)</span>
-          <p className="text-2xl font-extrabold text-amber-700 mt-1">{metrics.overdue}</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-amber-700 mt-1">{metrics.overdue}</p>
         </div>
 
-        <div className="bg-white border border-emerald-200 rounded-2xl p-4 shadow-sm bg-emerald-50/20">
+        <div className="bg-white border border-emerald-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm bg-emerald-50/20">
           <span className="text-[10px] uppercase font-bold text-emerald-600">Approved</span>
-          <p className="text-2xl font-extrabold text-emerald-700 mt-1">{metrics.approved}</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-emerald-700 mt-1">{metrics.approved}</p>
         </div>
 
-        <div className="bg-white border border-red-200 rounded-2xl p-4 shadow-sm bg-red-50/20">
+        <div className="bg-white border border-red-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm bg-red-50/20 col-span-2 sm:col-span-1">
           <span className="text-[10px] uppercase font-bold text-red-600">Rejected</span>
-          <p className="text-2xl font-extrabold text-red-700 mt-1">{metrics.rejected}</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-red-700 mt-1">{metrics.rejected}</p>
         </div>
       </div>
 
       {/* Filters and Search Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2.5 sm:gap-3">
         {/* Tabs */}
-        <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold overflow-x-auto">
+        <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold overflow-x-auto scrollbar-none">
           {(["ALL", "PENDING", "OVERDUE", "APPROVED", "REJECTED"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setFilterTab(tab)}
-              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg transition whitespace-nowrap text-xs ${
                 filterTab === tab
                   ? "bg-white text-slate-900 shadow-sm"
                   : "text-slate-500 hover:text-slate-900"
@@ -295,8 +295,115 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Orders List / Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      {/* Mobile Card View (visible on < md) */}
+      <div className="block md:hidden space-y-3">
+        {filteredOrders.length === 0 ? (
+          <div className="bg-white border border-slate-200 rounded-2xl py-10 text-center text-slate-400 text-xs">
+            No orders match the selected criteria.
+          </div>
+        ) : (
+          filteredOrders.map((order) => {
+            const isPending = order.status === "VERIFICATION_PENDING";
+            const isApproved = order.status === "APPROVED";
+            const isRejected = order.status === "REJECTED";
+
+            return (
+              <div key={order.orderId} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <a
+                    href={`/checkout/${order.orderId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-mono font-bold text-slate-900 hover:text-blue-600 inline-flex items-center space-x-1 text-xs"
+                  >
+                    <span>{order.orderId}</span>
+                    <ExternalLink className="w-3 h-3 text-slate-400" />
+                  </a>
+                  <span className="text-sm font-extrabold text-slate-900">
+                    {formatINR(order.amountPaise)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-100">
+                  <div className="space-y-0.5">
+                    <span className="text-slate-700 font-medium block text-xs">
+                      {order.customerName || "Anonymous"}
+                    </span>
+                    {order.utr ? (
+                      <span className="text-[11px] font-mono text-emerald-700 font-semibold block">
+                        UTR: {order.utr}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 block">No UTR submitted</span>
+                    )}
+                  </div>
+                  <div className="text-right space-y-1">
+                    {isApproved && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                        Approved
+                      </span>
+                    )}
+                    {isRejected && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-800">
+                        Rejected
+                      </span>
+                    )}
+                    {order.status === "AWAITING_PAYMENT" && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
+                        Awaiting Payment
+                      </span>
+                    )}
+                    {order.status === "PAYMENT_LAUNCHED" && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700">
+                        App Launched
+                      </span>
+                    )}
+                    {isPending && (
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                          order.isOverdue
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
+                        {order.isOverdue ? "Overdue (>7m)" : `Review (${order.formattedCountdown})`}
+                      </span>
+                    )}
+                    <span className="block text-[10px] text-slate-400">
+                      {new Date(order.createdAt).toLocaleTimeString("en-IN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                {(isPending || order.status === "PAYMENT_LAUNCHED") && (
+                  <div className="flex items-center space-x-2 pt-2 border-t border-slate-100">
+                    <button
+                      onClick={() => handleDecision(order.orderId, "APPROVED")}
+                      disabled={actionLoadingId === order.orderId}
+                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl font-semibold text-xs transition shadow-sm disabled:opacity-50 min-h-[38px]"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleDecision(order.orderId, "REJECTED")}
+                      disabled={actionLoadingId === order.orderId}
+                      className="flex-1 py-2 bg-red-600 hover:bg-red-700 active:scale-98 text-white rounded-xl font-semibold text-xs transition shadow-sm disabled:opacity-50 min-h-[38px]"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table View (visible on md+) */}
+      <div className="hidden md:block bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         {filteredOrders.length === 0 ? (
           <div className="py-12 text-center text-slate-400 text-xs">
             No orders match the selected criteria.

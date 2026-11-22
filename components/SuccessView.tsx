@@ -21,33 +21,33 @@ export const SuccessView: React.FC<SuccessViewProps> = ({ order, businessName })
       });
 
   return (
-    <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
+    <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-xl text-center space-y-4 sm:space-y-6 animate-in fade-in zoom-in-95 duration-300 mx-auto">
       {/* Success Badge */}
-      <div className="mx-auto w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center border border-emerald-100 shadow-inner">
-        <CheckCircle2 className="w-10 h-10" />
+      <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center border border-emerald-100 shadow-inner">
+        <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
       </div>
 
       <div>
-        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
           Payment Approved
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-xs sm:text-sm text-slate-500">
           Your order has been confirmed by the merchant.
         </p>
       </div>
 
       {/* Amount Card */}
-      <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4">
-        <span className="text-xs uppercase tracking-wider font-semibold text-emerald-800">
+      <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl sm:rounded-2xl p-3.5 sm:p-4">
+        <span className="text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-emerald-800">
           Amount Verified
         </span>
-        <div className="text-3xl font-extrabold text-emerald-900 mt-0.5">
+        <div className="text-2xl sm:text-3xl font-extrabold text-emerald-900 mt-0.5">
           {formattedAmount}
         </div>
       </div>
 
       {/* Order Details List */}
-      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs space-y-2.5 text-left">
+      <div className="bg-slate-50 border border-slate-100 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-xs space-y-2 sm:space-y-2.5 text-left">
         <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
           <span className="text-slate-500 flex items-center space-x-1.5">
             <Store className="w-3.5 h-3.5" />
