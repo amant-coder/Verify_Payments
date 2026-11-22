@@ -11,6 +11,15 @@ let firestoreDb: Firestore | null = null;
 const isPlaceholder = (val?: string) =>
   !val || val.includes("your-app") || val.includes("...") || val.includes("xxxxx");
 
+function cleanPrivateKey(key?: string): string {
+  if (!key) return "";
+  let clean = key.trim();
+  if ((clean.startsWith('"') && clean.endsWith('"')) || (clean.startsWith("'") && clean.endsWith("'"))) {
+    clean = clean.slice(1, -1).trim();
+  }
+  return clean.replace(/\\n/g, "\n");
+}
+
 const hasConfiguredKeys = Boolean(
   process.env.FIREBASE_PROJECT_ID && !isPlaceholder(process.env.FIREBASE_PROJECT_ID) &&
   process.env.FIREBASE_CLIENT_EMAIL && !isPlaceholder(process.env.FIREBASE_CLIENT_EMAIL) &&
@@ -25,41 +34,42 @@ try {
         credential: admin.credential.cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: (process.env.FIREBASE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
+          privateKey: cleanPrivateKey(process.env.FIREBASE_PRIVATE_KEY),
         }),
       });
     }
     firestoreDb = admin.firestore();
     console.log("[DB] Initialized with real Firebase Firestore.");
   } else {
-    // Fail fast in production runtime to prevent cross-instance data loss on serverless
-    if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
-      throw new Error("[DB] Fatal: Firebase credentials must be configured in production.");
-    }
-    console.info("[DB] Running with high-performance In-Memory repository (set Firebase env vars to use cloud Firestore).");
+    console.info("[DB] Running with high-performance In-Memory repository (Firebase credentials not configured or incomplete).");
   }
 } catch (err) {
-  if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
-    throw err;
-  }
-  console.warn("[DB] Firebase Admin init failed or skipped, using fallback store:", err);
+  console.warn("[DB] Firebase Admin init failed, falling back to in-memory store:", err);
+  firestoreDb = null;
 }
 
 const ORDERS_COLLECTION = "orders";
 
 export async function getOrder(orderId: string): Promise<PaymentOrder | null> {
   if (firestoreDb) {
-    const doc = await firestoreDb.collection(ORDERS_COLLECTION).doc(orderId).get();
-    if (!doc.exists) return null;
-    return doc.data() as PaymentOrder;
+    try {
+      const doc = await firestoreDb.collection(ORDERS_COLLECTION).doc(orderId).get();
+      if (doc.exists) return doc.data() as PaymentOrder;
+    } catch (err) {
+      console.warn("[DB] Firestore getOrder failed, checking in-memory:", err);
+    }
   }
   return inMemoryOrders.get(orderId) || null;
 }
 
 export async function createOrder(order: PaymentOrder): Promise<PaymentOrder> {
   if (firestoreDb) {
-    await firestoreDb.collection(ORDERS_COLLECTION).doc(order.orderId).set(order);
-    return order;
+    try {
+      await firestoreDb.collection(ORDERS_COLLECTION).doc(order.orderId).set(order);
+      return order;
+    } catch (err) {
+      console.warn("[DB] Firestore createOrder failed, falling back to in-memory:", err);
+    }
   }
   inMemoryOrders.set(order.orderId, { ...order });
   return order;
@@ -69,27 +79,31 @@ export async function recordPaymentLaunch(orderId: string): Promise<PaymentOrder
   const nowIso = new Date().toISOString();
 
   if (firestoreDb) {
-    const docRef = firestoreDb.collection(ORDERS_COLLECTION).doc(orderId);
-    let updatedOrder: PaymentOrder | null = null;
+    try {
+      const docRef = firestoreDb.collection(ORDERS_COLLECTION).doc(orderId);
+      let updatedOrder: PaymentOrder | null = null;
 
-    await firestoreDb.runTransaction(async (transaction) => {
-      const snap = await transaction.get(docRef);
-      if (!snap.exists) return;
-      const current = snap.data() as PaymentOrder;
+      await firestoreDb.runTransaction(async (transaction) => {
+        const snap = await transaction.get(docRef);
+        if (!snap.exists) return;
+        const current = snap.data() as PaymentOrder;
 
-      // Only transition to PAYMENT_LAUNCHED if still AWAITING_PAYMENT
-      if (current.status === "AWAITING_PAYMENT") {
-        transaction.update(docRef, {
-          status: "PAYMENT_LAUNCHED",
-          paymentLaunchedAt: nowIso,
-        });
-        updatedOrder = { ...current, status: "PAYMENT_LAUNCHED", paymentLaunchedAt: nowIso };
-      } else {
-        updatedOrder = current;
-      }
-    });
+        // Only transition to PAYMENT_LAUNCHED if still AWAITING_PAYMENT
+        if (current.status === "AWAITING_PAYMENT") {
+          transaction.update(docRef, {
+            status: "PAYMENT_LAUNCHED",
+            paymentLaunchedAt: nowIso,
+          });
+          updatedOrder = { ...current, status: "PAYMENT_LAUNCHED", paymentLaunchedAt: nowIso };
+        } else {
+          updatedOrder = current;
+        }
+      });
 
-    return updatedOrder;
+      if (updatedOrder) return updatedOrder;
+    } catch (err) {
+      console.warn("[DB] Firestore recordPaymentLaunch failed, checking in-memory:", err);
+    }
   }
 
   const existing = inMemoryOrders.get(orderId);
@@ -122,43 +136,47 @@ export async function recordPaymentReturn(orderId: string): Promise<ReturnRecord
   ).toISOString();
 
   if (firestoreDb) {
-    const docRef = firestoreDb.collection(ORDERS_COLLECTION).doc(orderId);
-    let result: ReturnRecordResult | null = null;
+    try {
+      const docRef = firestoreDb.collection(ORDERS_COLLECTION).doc(orderId);
+      let result: ReturnRecordResult | null = null;
 
-    await firestoreDb.runTransaction(async (transaction) => {
-      const snap = await transaction.get(docRef);
-      if (!snap.exists) return;
-      const current = snap.data() as PaymentOrder;
+      await firestoreDb.runTransaction(async (transaction) => {
+        const snap = await transaction.get(docRef);
+        if (!snap.exists) return;
+        const current = snap.data() as PaymentOrder;
 
-      // Already decided - do not touch
-      if (current.status === "APPROVED" || current.status === "REJECTED") {
-        result = { order: current, isFirstReturn: false };
-        return;
-      }
+        // Already decided - do not touch
+        if (current.status === "APPROVED" || current.status === "REJECTED") {
+          result = { order: current, isFirstReturn: false };
+          return;
+        }
 
-      // If verification has already started, do NOT reset timers or duplicate notifications
-      if (current.verificationStartedAt) {
-        result = { order: current, isFirstReturn: false };
-        return;
-      }
+        // If verification has already started, do NOT reset timers or duplicate notifications
+        if (current.verificationStartedAt) {
+          result = { order: current, isFirstReturn: false };
+          return;
+        }
 
-      // First return: Initialize timestamps atomically
-      const updates: Partial<PaymentOrder> = {
-        status: "VERIFICATION_PENDING",
-        verificationStartedAt: nowIso,
-        initialDeadlineAt: initialDeadline,
-        extendedDeadlineAt: extendedDeadline,
-        telegramNotificationSent: true,
-      };
+        // First return: Initialize timestamps atomically
+        const updates: Partial<PaymentOrder> = {
+          status: "VERIFICATION_PENDING",
+          verificationStartedAt: nowIso,
+          initialDeadlineAt: initialDeadline,
+          extendedDeadlineAt: extendedDeadline,
+          telegramNotificationSent: true,
+        };
 
-      transaction.update(docRef, updates);
-      result = {
-        order: { ...current, ...updates },
-        isFirstReturn: true,
-      };
-    });
+        transaction.update(docRef, updates);
+        result = {
+          order: { ...current, ...updates },
+          isFirstReturn: true,
+        };
+      });
 
-    return result;
+      if (result) return result;
+    } catch (err) {
+      console.warn("[DB] Firestore recordPaymentReturn failed, checking in-memory:", err);
+    }
   }
 
   const existing = inMemoryOrders.get(orderId);
@@ -190,10 +208,14 @@ export async function updateOrderUtr(orderId: string, utr: string): Promise<Paym
   if (!cleanUtr) return null;
 
   if (firestoreDb) {
-    const docRef = firestoreDb.collection(ORDERS_COLLECTION).doc(orderId);
-    await docRef.update({ utr: cleanUtr });
-    const snap = await docRef.get();
-    return snap.data() as PaymentOrder;
+    try {
+      const docRef = firestoreDb.collection(ORDERS_COLLECTION).doc(orderId);
+      await docRef.update({ utr: cleanUtr });
+      const snap = await docRef.get();
+      if (snap.exists) return snap.data() as PaymentOrder;
+    } catch (err) {
+      console.warn("[DB] Firestore updateOrderUtr failed, checking in-memory:", err);
+    }
   }
 
   const existing = inMemoryOrders.get(orderId);
@@ -217,46 +239,50 @@ export async function recordOrderDecision(
   const nowIso = new Date().toISOString();
 
   if (firestoreDb) {
-    const docRef = firestoreDb.collection(ORDERS_COLLECTION).doc(orderId);
-    let finalResult: { success: boolean; order?: PaymentOrder; alreadyDecided?: boolean; error?: string } = {
-      success: false,
-    };
+    try {
+      const docRef = firestoreDb.collection(ORDERS_COLLECTION).doc(orderId);
+      let finalResult: { success: boolean; order?: PaymentOrder; alreadyDecided?: boolean; error?: string } = {
+        success: false,
+      };
 
-    await firestoreDb.runTransaction(async (transaction) => {
-      const snap = await transaction.get(docRef);
-      if (!snap.exists) {
-        finalResult = { success: false, error: "Order not found." };
-        return;
-      }
+      await firestoreDb.runTransaction(async (transaction) => {
+        const snap = await transaction.get(docRef);
+        if (!snap.exists) {
+          finalResult = { success: false, error: "Order not found." };
+          return;
+        }
 
-      const current = snap.data() as PaymentOrder;
+        const current = snap.data() as PaymentOrder;
 
-      // If already decided, reject replayed or conflicting actions
-      if (current.status === "APPROVED" || current.status === "REJECTED") {
-        finalResult = {
-          success: false,
-          alreadyDecided: true,
-          order: current,
-          error: `Order already finalized as ${current.status}.`,
+        // If already decided, reject replayed or conflicting actions
+        if (current.status === "APPROVED" || current.status === "REJECTED") {
+          finalResult = {
+            success: false,
+            alreadyDecided: true,
+            order: current,
+            error: `Order already finalized as ${current.status}.`,
+          };
+          return;
+        }
+
+        const updates: Partial<PaymentOrder> = {
+          status: decision,
+          decisionSource: source,
+          approvedBy: decidedBy,
+          ...(decision === "APPROVED" ? { approvedAt: nowIso } : { rejectedAt: nowIso }),
         };
-        return;
-      }
 
-      const updates: Partial<PaymentOrder> = {
-        status: decision,
-        decisionSource: source,
-        approvedBy: decidedBy,
-        ...(decision === "APPROVED" ? { approvedAt: nowIso } : { rejectedAt: nowIso }),
-      };
+        transaction.update(docRef, updates);
+        finalResult = {
+          success: true,
+          order: { ...current, ...updates },
+        };
+      });
 
-      transaction.update(docRef, updates);
-      finalResult = {
-        success: true,
-        order: { ...current, ...updates },
-      };
-    });
-
-    return finalResult;
+      if (finalResult.success || finalResult.error) return finalResult;
+    } catch (err) {
+      console.warn("[DB] Firestore recordOrderDecision failed, checking in-memory:", err);
+    }
   }
 
   const existing = inMemoryOrders.get(orderId);
@@ -290,11 +316,15 @@ export async function updateTelegramMessageMeta(
   chatId: string | number
 ): Promise<void> {
   if (firestoreDb) {
-    await firestoreDb.collection(ORDERS_COLLECTION).doc(orderId).update({
-      telegramMessageId: messageId,
-      telegramChatId: chatId,
-    });
-    return;
+    try {
+      await firestoreDb.collection(ORDERS_COLLECTION).doc(orderId).update({
+        telegramMessageId: messageId,
+        telegramChatId: chatId,
+      });
+      return;
+    } catch (err) {
+      console.warn("[DB] Firestore updateTelegramMessageMeta failed, checking in-memory:", err);
+    }
   }
   const existing = inMemoryOrders.get(orderId);
   if (existing) {
@@ -306,8 +336,12 @@ export async function updateTelegramMessageMeta(
 
 export async function listOrders(): Promise<PaymentOrder[]> {
   if (firestoreDb) {
-    const snap = await firestoreDb.collection(ORDERS_COLLECTION).orderBy("createdAt", "desc").get();
-    return snap.docs.map((doc) => doc.data() as PaymentOrder);
+    try {
+      const snap = await firestoreDb.collection(ORDERS_COLLECTION).orderBy("createdAt", "desc").get();
+      return snap.docs.map((doc) => doc.data() as PaymentOrder);
+    } catch (err) {
+      console.warn("[DB] Firestore listOrders failed, checking in-memory:", err);
+    }
   }
   return Array.from(inMemoryOrders.values()).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

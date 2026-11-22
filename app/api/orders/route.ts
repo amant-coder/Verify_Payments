@@ -40,9 +40,9 @@ export async function POST(req: NextRequest) {
     await createOrder(newOrder);
 
     return NextResponse.json({ success: true, order: newOrder }, { status: 201 });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Order creation failed:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: err?.message || "Internal server error" }, { status: 500 });
   }
 }
 
