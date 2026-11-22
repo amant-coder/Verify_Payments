@@ -269,7 +269,13 @@ export default function CheckoutPage() {
 
   // Render Rejected (REJECTED)
   if (order.status === "REJECTED") {
-    return <RejectedView order={order} />;
+    return (
+      <RejectedView
+        order={order}
+        businessName={BUSINESS_NAME}
+        onRetry={() => router.push("/")}
+      />
+    );
   }
 
   // Render Verification in progress (VERIFICATION_PENDING or timers active)

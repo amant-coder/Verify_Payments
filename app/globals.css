@@ -21,3 +21,29 @@ body {
 .animate-pulse-subtle {
   animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Print styling for downloaded transaction receipts */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt,
+  #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 24px;
+    background: white !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

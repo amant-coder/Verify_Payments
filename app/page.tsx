@@ -63,11 +63,9 @@ export default function DemoStorefrontPage() {
             </div>
             <div>
               <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
-                UPI Minimal Checkout
+                UPI Checkout
               </h1>
-              <p className="text-[11px] sm:text-xs text-slate-500">
-                Automatic Return Detection & Telegram Approval
-              </p>
+
             </div>
           </div>
 
@@ -76,13 +74,13 @@ export default function DemoStorefrontPage() {
             className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-xl text-xs font-semibold text-slate-700 transition shrink-0"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-            <span>Admin</span>
+            <span></span>
           </a>
         </div>
 
         {/* Feature Highlights */}
         <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-[10px] sm:text-[11px] text-slate-600 bg-slate-50 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-slate-100">
-          <div className="space-y-0.5 sm:space-y-1"> 
+          <div className="space-y-0.5 sm:space-y-1">
             <Smartphone className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto text-blue-600" />
             <span className="font-semibold block truncate">Mobile Launch</span>
             <span className="text-[9px] sm:text-[10px] text-slate-400 block truncate">One-tap app</span>
