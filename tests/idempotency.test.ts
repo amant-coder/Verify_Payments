@@ -80,10 +80,10 @@ describe("Return Detection & Idempotency", () => {
     expect(returnPostDecision?.isFirstReturn).toBe(false);
   });
 
-  it("blocks approval while order is still AWAITING_PAYMENT, but allows rejection", async () => {
+  it("allows instant approval or rejection while order is in AWAITING_PAYMENT upon QR scan", async () => {
     const order: PaymentOrder = {
-      orderId: "ORD-UNVERIFIED",
-      customerUid: "cust_unver",
+      orderId: "ORD-INSTANT-QR",
+      customerUid: "cust_instant",
       amountPaise: 20000,
       currency: "INR",
       status: "AWAITING_PAYMENT",
@@ -91,15 +91,10 @@ describe("Return Detection & Idempotency", () => {
     };
     await createOrder(order);
 
-    // Premature approval must be blocked
-    const decApproved = await recordOrderDecision("ORD-UNVERIFIED", "APPROVED", "AdminUser", "ADMIN");
-    expect(decApproved.success).toBe(false);
-    expect(decApproved.error).toContain("Cannot approve order while awaiting payment");
-
-    // Rejection of abandoned/unpaid order is permitted
-    const decRejected = await recordOrderDecision("ORD-UNVERIFIED", "REJECTED", "AdminUser", "ADMIN");
-    expect(decRejected.success).toBe(true);
-    expect(decRejected.order?.status).toBe("REJECTED");
+    // Instant merchant approval upon customer scanning QR code
+    const decApproved = await recordOrderDecision("ORD-INSTANT-QR", "APPROVED", "AdminUser", "TELEGRAM");
+    expect(decApproved.success).toBe(true);
+    expect(decApproved.order?.status).toBe("APPROVED");
   });
 
   it("updates customer UTR without modifying verification timestamps", async () => {

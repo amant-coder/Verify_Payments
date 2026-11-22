@@ -306,15 +306,6 @@ export async function recordOrderDecision(
 
         const current = snap.data() as PaymentOrder;
 
-        // Prevent approving an order before payment initiation/verification
-        if (decision === "APPROVED" && current.status === "AWAITING_PAYMENT") {
-          finalResult = {
-            success: false,
-            error: "Cannot approve order while awaiting payment. Customer must initiate payment or verification first.",
-          };
-          return;
-        }
-
         // If already decided, reject replayed or conflicting actions
         if (current.status === "APPROVED" || current.status === "REJECTED") {
           finalResult = {
@@ -349,13 +340,6 @@ export async function recordOrderDecision(
 
   const existing = inMemoryOrders.get(orderId);
   if (!existing) return { success: false, error: "Order not found." };
-
-  if (decision === "APPROVED" && existing.status === "AWAITING_PAYMENT") {
-    return {
-      success: false,
-      error: "Cannot approve order while awaiting payment. Customer must initiate payment or verification first.",
-    };
-  }
 
   if (existing.status === "APPROVED" || existing.status === "REJECTED") {
     return {

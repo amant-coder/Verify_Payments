@@ -36,10 +36,20 @@ export async function POST(req: NextRequest) {
       customerName: customerName ? String(customerName).slice(0, 50) : undefined,
       customerPhone: customerPhone ? String(customerPhone).slice(0, 15) : undefined,
       createdAt: new Date().toISOString(),
-      telegramNotificationSent: false,
+      telegramNotificationSent: true,
     };
 
     await createOrder(newOrder);
+
+    // Send Telegram verification notification immediately so merchant can approve upon scanning QR
+    try {
+      const tgResult = await sendVerificationNotification(newOrder);
+      if (tgResult.success && tgResult.messageId && tgResult.chatId) {
+        await updateTelegramMessageMeta(newOrder.orderId, tgResult.messageId, tgResult.chatId);
+      }
+    } catch (tgErr) {
+      console.warn("[Orders] Telegram instant notification failed or skipped:", tgErr);
+    }
 
     return NextResponse.json({ success: true, order: newOrder }, { status: 201 });
   } catch (err: any) {
