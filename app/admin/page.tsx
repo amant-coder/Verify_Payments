@@ -25,6 +25,7 @@ export default function AdminDashboardPage() {
   const [filterTab, setFilterTab] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED" | "OVERDUE">("ALL");
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [isAuthValid, setIsAuthValid] = useState<boolean | null>(null);
 
   const fetchOrders = async () => {
     try {
@@ -35,9 +36,11 @@ export default function AdminDashboardPage() {
         const data = await res.json();
         if (data.orders) setOrders(data.orders);
         setActionMessage(null);
+        setIsAuthValid(true);
       } else if (res.status === 401) {
         setActionMessage("Unauthorized. Please check your Admin Secret.");
         setOrders([]);
+        setIsAuthValid(false);
       }
     } catch (err) {
       console.error("Failed to fetch orders:", err);
@@ -148,8 +151,14 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs shadow-sm focus-within:ring-2 focus-within:ring-blue-500">
-            <Key className="w-3.5 h-3.5 text-slate-500" />
+          <div className={`flex items-center space-x-1.5 bg-white border rounded-xl px-3 py-1.5 text-xs shadow-sm transition ${
+            isAuthValid === true
+              ? "border-emerald-400 ring-2 ring-emerald-100"
+              : isAuthValid === false
+              ? "border-rose-400 ring-2 ring-rose-100"
+              : "border-slate-300 focus-within:ring-2 focus-within:ring-blue-500"
+          }`}>
+            <Key className={`w-3.5 h-3.5 ${isAuthValid === true ? "text-emerald-600" : isAuthValid === false ? "text-rose-500" : "text-slate-500"}`} />
             <input
               type="password"
               value={adminSecret}
@@ -163,6 +172,16 @@ export default function AdminDashboardPage() {
               className="w-32 focus:outline-none text-xs font-mono"
               title="Enter your ADMIN_SECRET_KEY"
             />
+            {isAuthValid === true && (
+              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                ✓ Valid
+              </span>
+            )}
+            {isAuthValid === false && (
+              <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
+                ✕ Invalid
+              </span>
+            )}
           </div>
 
           <button
