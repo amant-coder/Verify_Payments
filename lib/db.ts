@@ -48,6 +48,10 @@ try {
   firestoreDb = null;
 }
 
+export function isFirestoreConnected(): boolean {
+  return firestoreDb !== null;
+}
+
 const ORDERS_COLLECTION = "orders";
 
 export async function getOrder(orderId: string): Promise<PaymentOrder | null> {

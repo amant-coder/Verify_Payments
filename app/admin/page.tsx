@@ -26,6 +26,7 @@ export default function AdminDashboardPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [isAuthValid, setIsAuthValid] = useState<boolean | null>(null);
+  const [storageType, setStorageType] = useState<"FIRESTORE" | "IN_MEMORY" | null>(null);
 
   const fetchOrders = async () => {
     try {
@@ -35,6 +36,7 @@ export default function AdminDashboardPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.orders) setOrders(data.orders);
+        if (data.storage) setStorageType(data.storage);
         setActionMessage(null);
         setIsAuthValid(true);
       } else if (res.status === 401) {
@@ -139,9 +141,21 @@ export default function AdminDashboardPage() {
       {/* Dashboard Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <span className="text-xs uppercase tracking-wider font-semibold text-blue-600">
-            Merchant Operations
-          </span>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs uppercase tracking-wider font-semibold text-blue-600">
+              Merchant Operations
+            </span>
+            {storageType === "FIRESTORE" && (
+              <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">
+                ☁️ Firestore Live
+              </span>
+            )}
+            {storageType === "IN_MEMORY" && (
+              <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-300 px-2 py-0.5 rounded-full font-semibold">
+                ⚠️ In-Memory Mode
+              </span>
+            )}
+          </div>
           <h1 className="text-2xl font-bold text-slate-900">
             UPI Payment Approvals & Audit
           </h1>
@@ -206,6 +220,18 @@ export default function AdminDashboardPage() {
           <button onClick={() => setActionMessage(null)} className="text-blue-500 hover:text-blue-700">
             ✕
           </button>
+        </div>
+      )}
+
+      {storageType === "IN_MEMORY" && (
+        <div className="p-3.5 bg-amber-50 border border-amber-300 text-amber-900 rounded-2xl text-xs flex items-start space-x-2.5">
+          <span className="text-base leading-none">⚠️</span>
+          <div>
+            <p className="font-semibold text-amber-900">Orders not syncing across devices (In-Memory Mode)</p>
+            <p className="text-amber-800 text-[11px] mt-0.5">
+              Vercel runs pages on isolated serverless lambdas. To enable real-time sync across devices, your Firebase environment variables must be saved in <strong>Vercel Project Settings &rarr; Environment Variables</strong> and then <strong>Redeployed</strong>.
+            </p>
+          </div>
         </div>
       )}
 

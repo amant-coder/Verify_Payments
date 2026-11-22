@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createOrder, listOrders } from "@/lib/db";
+import { createOrder, listOrders, isFirestoreConnected } from "@/lib/db";
 import { isValidAdminSecret } from "@/lib/auth";
 import { PaymentOrder } from "@/types/order";
 
@@ -53,7 +53,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const orders = await listOrders();
-    return NextResponse.json({ success: true, orders });
+    return NextResponse.json({
+      success: true,
+      orders,
+      storage: isFirestoreConnected() ? "FIRESTORE" : "IN_MEMORY",
+    });
   } catch (err) {
     return NextResponse.json({ error: "Failed to list orders" }, { status: 500 });
   }
