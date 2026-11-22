@@ -75,13 +75,13 @@ export default function DemoStorefrontPage() {
             href="/admin"
             className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-700 transition"
           >
-            Admin Portal
+            
           </a>
         </div>
 
         {/* Feature Highlights */}
         <div className="grid grid-cols-3 gap-2 text-center text-[11px] text-slate-600 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-          <div className="space-y-1">
+          <div className="space-y-1"> 
             <Smartphone className="w-4 h-4 mx-auto text-blue-600" />
             <span className="font-semibold block">Mobile Deep-Link</span>
             <span className="text-[10px] text-slate-400">One-tap app launch</span>

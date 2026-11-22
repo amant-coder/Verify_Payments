@@ -84,19 +84,31 @@ npm install
 
 ### 2. Configure Environment
 
-Copy `.env.example` to `.env.local`:
+Copy `.env.example` to `.env.local` and add your Firebase and Telegram credentials:
 
 ```bash
 cp .env.example .env.local
 ```
 
-### 3. Run Automated Tests
+### 3. Verify Firebase Connection
+
+Check your client auth and server-side Firestore connection in one command:
+
+```bash
+npm run verify:firebase
+```
+
+### 4. Apply Firestore Security Rules
+
+Copy the rules from `firestore.rules` into **Firebase Console > Firestore Database > Rules** and click **Publish**. This protects customer order data from unauthorized reads and blocks direct client writes.
+
+### 5. Run Automated Tests
 
 ```bash
 npm run test
 ```
 
-### 4. Start Local Development Server
+### 6. Start Local Development Server
 
 ```bash
 npm run dev
@@ -126,6 +138,15 @@ Visit [http://localhost:3000](http://localhost:3000):
         -F "secret_token=YOUR_WEBHOOK_SECRET" \
         https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook
    ```
+
+---
+
+## 🚀 Production Deployment Checklist
+
+1. **Set Merchant UPI ID**: In `.env.local` (and your host's environment settings), set `NEXT_PUBLIC_MERCHANT_UPI_ID` to your receiving UPI VPA.
+2. **Secure Admin Secret**: Change `ADMIN_SECRET_KEY` to a private password.
+3. **Add Env Vars to Hosting Provider**: When deploying to Vercel/Netlify, copy all variables from `.env.local` into the platform dashboard.
+4. **Register Telegram Webhook**: Run step 3 above with your deployed domain and webhook secret.
 
 ---
 
