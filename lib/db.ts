@@ -41,6 +41,9 @@ try {
       });
     }
     firestoreDb = admin.firestore();
+    try {
+      firestoreDb.settings({ ignoreUndefinedProperties: true });
+    } catch {}
     console.log("[DB] Initialized with real Firebase Firestore.");
   } else {
     lastInitError = "Missing or placeholder Firebase keys in environment (FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, or FIREBASE_PRIVATE_KEY)";
@@ -66,6 +69,16 @@ export function getDbStatus() {
 
 const ORDERS_COLLECTION = "orders";
 
+function sanitizeForFirestore<T extends Record<string, any>>(obj: T): T {
+  const clean: any = {};
+  for (const [key, val] of Object.entries(obj)) {
+    if (val !== undefined) {
+      clean[key] = val;
+    }
+  }
+  return clean as T;
+}
+
 export async function getOrder(orderId: string): Promise<PaymentOrder | null> {
   if (firestoreDb) {
     try {
@@ -81,10 +94,10 @@ export async function getOrder(orderId: string): Promise<PaymentOrder | null> {
 export async function createOrder(order: PaymentOrder): Promise<PaymentOrder> {
   if (firestoreDb) {
     try {
-      await firestoreDb.collection(ORDERS_COLLECTION).doc(order.orderId).set(order);
+      await firestoreDb.collection(ORDERS_COLLECTION).doc(order.orderId).set(sanitizeForFirestore(order));
       return order;
     } catch (err) {
-      console.warn("[DB] Firestore createOrder failed, falling back to in-memory:", err);
+      console.error("[DB] Firestore createOrder failed, falling back to in-memory:", err);
     }
   }
   inMemoryOrders.set(order.orderId, { ...order });
@@ -182,7 +195,7 @@ export async function recordPaymentReturn(orderId: string): Promise<ReturnRecord
           telegramNotificationSent: true,
         };
 
-        transaction.update(docRef, updates);
+        transaction.update(docRef, sanitizeForFirestore(updates));
         result = {
           order: { ...current, ...updates },
           isFirstReturn: true,
@@ -288,7 +301,7 @@ export async function recordOrderDecision(
           ...(decision === "APPROVED" ? { approvedAt: nowIso } : { rejectedAt: nowIso }),
         };
 
-        transaction.update(docRef, updates);
+        transaction.update(docRef, sanitizeForFirestore(updates));
         finalResult = {
           success: true,
           order: { ...current, ...updates },
