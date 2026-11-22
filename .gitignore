@@ -1,0 +1,37 @@
+# dependencies
+node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+/dist
+
+# misc
+.DS_Store
+*.pem
+*.key
+*.crt
+
+# environment variables & credentials
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Firebase & GCP service account keys / credentials
+*serviceAccount*.json
+*service-account*.json
+*firebase-adminsdk*.json
+credentials.json
+client_secret*.json
+*.private-key.json

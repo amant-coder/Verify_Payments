@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Orders collection:
+    // 1. Only the customer who owns the order (or authenticated admin) may read it.
+    // 2. Deny ALL direct client writes! All state mutations (launch, return, decision, utr)
+    //    must pass through secure Next.js Route Handlers using Firebase Admin SDK.
+    match /orders/{orderId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.customerUid ||
+        request.auth.token.admin == true
+      );
+      
+      // Strict Deny-by-default on all direct client mutations
+      allow write: if false;
+    }
+    
+    // Deny access to any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
