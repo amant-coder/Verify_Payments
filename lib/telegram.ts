@@ -77,6 +77,29 @@ export async function sendVerificationNotification(
 
     const data = await res.json();
     if (!data.ok) {
+      // Auto-handle Telegram group to supergroup migration
+      if (data.parameters?.migrate_to_chat_id) {
+        const migratedId = data.parameters.migrate_to_chat_id;
+        console.warn(`[Telegram] Group migrated to supergroup ${migratedId}. Retrying with new ID...`);
+        const retryRes = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: migratedId,
+            text,
+            parse_mode: "HTML",
+            reply_markup: inlineKeyboard,
+          }),
+        });
+        const retryData = await retryRes.json();
+        if (retryData.ok) {
+          return {
+            success: true,
+            messageId: retryData.result?.message_id,
+            chatId: retryData.result?.chat?.id,
+          };
+        }
+      }
       console.error("[Telegram] API error:", data);
       return { success: false, error: data.description || "Telegram API call failed" };
     }

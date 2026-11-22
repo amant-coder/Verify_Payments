@@ -147,15 +147,18 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         </div>
       </div>
 
-      {/* Discrete Fallback: Check Payment Status */}
-      <div className="pt-2 text-center border-t border-slate-100">
+      {/* Prominent Action for QR Scanners: I Have Paid */}
+      <div className="pt-1 text-center space-y-2">
         <button
           onClick={onManualCheckStatus}
-          className="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-slate-800 transition py-1"
+          className="w-full py-3.5 px-4 bg-emerald-50 hover:bg-emerald-100 active:scale-[0.99] border-2 border-emerald-500/40 text-emerald-800 font-bold rounded-2xl flex items-center justify-center space-x-2 transition shadow-sm"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Already paid via QR on another device? Check Status</span>
+          <Check className="w-5 h-5 text-emerald-600" />
+          <span className="text-sm">I Have Paid via QR (Verify Payment)</span>
         </button>
+        <p className="text-[11px] text-slate-400">
+          Tap this after completing payment in your UPI app to start verification
+        </p>
       </div>
 
       {/* Security Disclaimer */}
