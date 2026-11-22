@@ -62,35 +62,40 @@ export async function sendVerificationNotification(
     ],
   };
 
-  try {
+  const makeRequest = async (targetChatId: string | number) => {
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        text,
-        parse_mode: "HTML",
-        reply_markup: inlineKeyboard,
-      }),
-    });
+    const payload = {
+      chat_id: targetChatId,
+      text,
+      parse_mode: "HTML",
+      reply_markup: inlineKeyboard,
+    };
+    try {
+      return await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (networkErr) {
+      // 1-shot retry on transient network glitch
+      await new Promise((r) => setTimeout(r, 600));
+      return await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
+  };
 
+  try {
+    const res = await makeRequest(TELEGRAM_CHAT_ID);
     const data = await res.json();
     if (!data.ok) {
       // Auto-handle Telegram group to supergroup migration
       if (data.parameters?.migrate_to_chat_id) {
         const migratedId = data.parameters.migrate_to_chat_id;
         console.warn(`[Telegram] Group migrated to supergroup ${migratedId}. Retrying with new ID...`);
-        const retryRes = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: migratedId,
-            text,
-            parse_mode: "HTML",
-            reply_markup: inlineKeyboard,
-          }),
-        });
+        const retryRes = await makeRequest(migratedId);
         const retryData = await retryRes.json();
         if (retryData.ok) {
           return {

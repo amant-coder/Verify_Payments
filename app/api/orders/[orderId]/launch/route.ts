@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { recordPaymentLaunch } from "@/lib/db";
+import { recordPaymentLaunch, getOrder, updateTelegramMessageMeta } from "@/lib/db";
+import { sendVerificationNotification } from "@/lib/telegram";
+import { isValidAdminSecret } from "@/lib/auth";
 
 export async function POST(
   req: NextRequest,
@@ -11,9 +13,36 @@ export async function POST(
       return NextResponse.json({ error: "Missing order ID" }, { status: 400 });
     }
 
+    const current = await getOrder(orderId);
+    if (!current) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Verify customer ownership or admin
+    const customerUid = req.headers.get("x-customer-uid");
+    const adminSecret = req.headers.get("x-admin-secret");
+    const isOwner = Boolean(current.customerUid && customerUid === current.customerUid);
+    const isAdmin = isValidAdminSecret(adminSecret);
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ error: "Access denied." }, { status: 403 });
+    }
+
     const updated = await recordPaymentLaunch(orderId);
     if (!updated) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Send Telegram alert on payment launch if not yet sent
+    if (!updated.telegramMessageId) {
+      try {
+        const tgResult = await sendVerificationNotification(updated);
+        if (tgResult.success && tgResult.messageId && tgResult.chatId) {
+          await updateTelegramMessageMeta(orderId, tgResult.messageId, tgResult.chatId);
+        }
+      } catch (tgErr) {
+        console.warn("[Launch] Telegram alert error:", tgErr);
+      }
     }
 
     return NextResponse.json({ success: true, order: updated });

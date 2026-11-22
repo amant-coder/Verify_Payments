@@ -80,12 +80,21 @@ function sanitizeForFirestore<T extends Record<string, any>>(obj: T): T {
   return clean as T;
 }
 
+function checkProductionStorage(): void {
+  if (process.env.NODE_ENV === "production" && !firestoreDb) {
+    throw new Error(`[DB] Firestore is required in production but not initialized: ${lastInitError || "Missing credentials"}`);
+  }
+}
+
 export async function getOrder(orderId: string): Promise<PaymentOrder | null> {
+  checkProductionStorage();
   if (firestoreDb) {
     try {
       const doc = await firestoreDb.collection(ORDERS_COLLECTION).doc(orderId).get();
       if (doc.exists) return doc.data() as PaymentOrder;
-    } catch (err) {
+      return null;
+    } catch (err: any) {
+      if (process.env.NODE_ENV === "production") throw err;
       console.warn("[DB] Firestore getOrder failed, checking in-memory:", err);
     }
   }
@@ -93,11 +102,13 @@ export async function getOrder(orderId: string): Promise<PaymentOrder | null> {
 }
 
 export async function createOrder(order: PaymentOrder): Promise<PaymentOrder> {
+  checkProductionStorage();
   if (firestoreDb) {
     try {
       await firestoreDb.collection(ORDERS_COLLECTION).doc(order.orderId).set(sanitizeForFirestore(order));
       return order;
-    } catch (err) {
+    } catch (err: any) {
+      if (process.env.NODE_ENV === "production") throw err;
       console.error("[DB] Firestore createOrder failed, falling back to in-memory:", err);
     }
   }
@@ -106,6 +117,7 @@ export async function createOrder(order: PaymentOrder): Promise<PaymentOrder> {
 }
 
 export async function recordPaymentLaunch(orderId: string): Promise<PaymentOrder | null> {
+  checkProductionStorage();
   const nowIso = new Date().toISOString();
 
   if (firestoreDb) {
@@ -118,7 +130,7 @@ export async function recordPaymentLaunch(orderId: string): Promise<PaymentOrder
         if (!snap.exists) return;
         const current = snap.data() as PaymentOrder;
 
-        // Only transition to PAYMENT_LAUNCHED if still AWAITING_PAYMENT
+        // Transition to PAYMENT_LAUNCHED if still AWAITING_PAYMENT
         if (current.status === "AWAITING_PAYMENT") {
           transaction.update(docRef, {
             status: "PAYMENT_LAUNCHED",
@@ -131,7 +143,9 @@ export async function recordPaymentLaunch(orderId: string): Promise<PaymentOrder
       });
 
       if (updatedOrder) return updatedOrder;
-    } catch (err) {
+      return null;
+    } catch (err: any) {
+      if (process.env.NODE_ENV === "production") throw err;
       console.warn("[DB] Firestore recordPaymentLaunch failed, checking in-memory:", err);
     }
   }
@@ -157,6 +171,7 @@ export interface ReturnRecordResult {
  * Idempotent: Only initializes timestamps and triggers verification on the first return.
  */
 export async function recordPaymentReturn(orderId: string): Promise<ReturnRecordResult | null> {
+  checkProductionStorage();
   const now = new Date();
   const nowIso = now.toISOString();
 
@@ -204,7 +219,9 @@ export async function recordPaymentReturn(orderId: string): Promise<ReturnRecord
       });
 
       if (result) return result;
-    } catch (err) {
+      return null;
+    } catch (err: any) {
+      if (process.env.NODE_ENV === "production") throw err;
       console.warn("[DB] Firestore recordPaymentReturn failed, checking in-memory:", err);
     }
   }
@@ -234,6 +251,7 @@ export async function recordPaymentReturn(orderId: string): Promise<ReturnRecord
  * Updates an order with customer-provided UTR / reference number.
  */
 export async function updateOrderUtr(orderId: string, utr: string): Promise<PaymentOrder | null> {
+  checkProductionStorage();
   const cleanUtr = utr.trim().replace(/[^a-zA-Z0-9]/g, "");
   if (!cleanUtr) return null;
 
@@ -243,7 +261,9 @@ export async function updateOrderUtr(orderId: string, utr: string): Promise<Paym
       await docRef.update({ utr: cleanUtr });
       const snap = await docRef.get();
       if (snap.exists) return snap.data() as PaymentOrder;
-    } catch (err) {
+      return null;
+    } catch (err: any) {
+      if (process.env.NODE_ENV === "production") throw err;
       console.warn("[DB] Firestore updateOrderUtr failed, checking in-memory:", err);
     }
   }
@@ -258,7 +278,8 @@ export async function updateOrderUtr(orderId: string, utr: string): Promise<Paym
 
 /**
  * Records merchant decision (APPROVED or REJECTED) atomically.
- * Prevents race conditions, duplicates, or changing an already-finalized order.
+ * Prevents premature approval before payment launch/verification,
+ * and prevents race conditions or changing an already-finalized order.
  */
 export async function recordOrderDecision(
   orderId: string,
@@ -266,6 +287,7 @@ export async function recordOrderDecision(
   decidedBy: string,
   source: "TELEGRAM" | "ADMIN"
 ): Promise<{ success: boolean; order?: PaymentOrder; alreadyDecided?: boolean; error?: string }> {
+  checkProductionStorage();
   const nowIso = new Date().toISOString();
 
   if (firestoreDb) {
@@ -283,6 +305,15 @@ export async function recordOrderDecision(
         }
 
         const current = snap.data() as PaymentOrder;
+
+        // Prevent approving an order before payment initiation/verification
+        if (decision === "APPROVED" && current.status === "AWAITING_PAYMENT") {
+          finalResult = {
+            success: false,
+            error: "Cannot approve order while awaiting payment. Customer must initiate payment or verification first.",
+          };
+          return;
+        }
 
         // If already decided, reject replayed or conflicting actions
         if (current.status === "APPROVED" || current.status === "REJECTED") {
@@ -310,13 +341,21 @@ export async function recordOrderDecision(
       });
 
       if (finalResult.success || finalResult.error) return finalResult;
-    } catch (err) {
+    } catch (err: any) {
+      if (process.env.NODE_ENV === "production") throw err;
       console.warn("[DB] Firestore recordOrderDecision failed, checking in-memory:", err);
     }
   }
 
   const existing = inMemoryOrders.get(orderId);
   if (!existing) return { success: false, error: "Order not found." };
+
+  if (decision === "APPROVED" && existing.status === "AWAITING_PAYMENT") {
+    return {
+      success: false,
+      error: "Cannot approve order while awaiting payment. Customer must initiate payment or verification first.",
+    };
+  }
 
   if (existing.status === "APPROVED" || existing.status === "REJECTED") {
     return {

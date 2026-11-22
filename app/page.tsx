@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, ArrowRight, ShieldCheck, Zap, Bot, Smartphone } from "lucide-react";
 import { formatINR } from "@/lib/upi";
+import { getOrCreateCustomerUid } from "@/lib/firebase";
 
 export default function DemoStorefrontPage() {
   const router = useRouter();
@@ -28,12 +29,14 @@ export default function DemoStorefrontPage() {
     setError(null);
 
     try {
+      const customerUid = await getOrCreateCustomerUid();
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amountPaise,
           customerName: customerName.trim() || undefined,
+          customerUid,
         }),
       });
 

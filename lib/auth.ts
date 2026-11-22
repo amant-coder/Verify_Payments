@@ -1,5 +1,8 @@
+import crypto from "crypto";
+
 /**
  * Validates the admin secret key for dashboard and decision endpoints.
+ * Uses constant-time comparison to prevent timing side-channel attacks.
  * Fails closed in production if unset or set to the default placeholder.
  */
 export function isValidAdminSecret(providedSecret: string | null | undefined): boolean {
@@ -7,10 +10,25 @@ export function isValidAdminSecret(providedSecret: string | null | undefined): b
   const secret = process.env.ADMIN_SECRET_KEY;
 
   if (process.env.NODE_ENV === "production") {
-    // shortcut: string equality ok for token, upgrade to timingSafeEqual if public attack surface grows
-    return Boolean(secret && secret !== "admin123" && providedSecret === secret);
+    if (!secret || secret === "admin123") return false;
+    try {
+      const a = Buffer.from(providedSecret, "utf8");
+      const b = Buffer.from(secret, "utf8");
+      if (a.length !== b.length) return false;
+      return crypto.timingSafeEqual(a, b);
+    } catch {
+      return false;
+    }
   }
 
   // Development / test fallback
-  return providedSecret === (secret || "admin123");
+  const expected = secret || "admin123";
+  try {
+    const a = Buffer.from(providedSecret, "utf8");
+    const b = Buffer.from(expected, "utf8");
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }

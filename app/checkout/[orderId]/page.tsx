@@ -26,6 +26,7 @@ export default function CheckoutPage() {
   const [isLaunching, setIsLaunching] = useState<boolean>(false);
   const [serverClockOffsetMs, setServerClockOffsetMs] = useState<number>(0);
   const [authReady, setAuthReady] = useState<boolean>(false);
+  const [customerUid, setCustomerUid] = useState<string>("");
 
   // Derive timer state
   const [timerState, setTimerState] = useState<TimerState | null>(null);
@@ -33,14 +34,25 @@ export default function CheckoutPage() {
   // Return detection guard: prevent duplicate return posts within the same visibility cycle
   const hasTriggeredReturnRef = useRef<boolean>(false);
 
+  const getAuthHeaders = useCallback(() => {
+    const headers: Record<string, string> = {};
+    const uid = customerUid || (typeof window !== "undefined" ? localStorage.getItem("upi_customer_uid") || "" : "");
+    if (uid) headers["x-customer-uid"] = uid;
+    return headers;
+  }, [customerUid]);
+
   // 1. Initial order fetch & clock offset estimation
   const fetchOrderData = useCallback(async () => {
     if (!orderId) return;
     try {
-      const res = await fetch(`/api/orders/${orderId}`);
+      const res = await fetch(`/api/orders/${orderId}`, {
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) {
         if (res.status === 404) {
           setError("Order not found or has expired.");
+        } else if (res.status === 403) {
+          setError("Access denied. You do not have permission to view this order.");
         } else {
           setError("Failed to load checkout details.");
         }
@@ -63,12 +75,15 @@ export default function CheckoutPage() {
       setError("Network error while connecting to payment service.");
       setLoading(false);
     }
-  }, [orderId]);
+  }, [orderId, getAuthHeaders]);
 
   // 2. Initialize customer UID and fetch order
   useEffect(() => {
     getOrCreateCustomerUid()
-      .then(() => setAuthReady(true))
+      .then((uid) => {
+        setCustomerUid(uid);
+        setAuthReady(true);
+      })
       .catch((err) => {
         console.warn(err);
         setAuthReady(true);
@@ -109,6 +124,7 @@ export default function CheckoutPage() {
     try {
       const res = await fetch(`/api/orders/${orderId}/return`, {
         method: "POST",
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         const data = await res.json();
@@ -119,7 +135,7 @@ export default function CheckoutPage() {
     } catch (err) {
       console.error("Failed to post return event:", err);
     }
-  }, [orderId]);
+  }, [orderId, getAuthHeaders]);
 
   // 5. Automatic browser return detection (visibilitychange, pageshow, focus)
   useEffect(() => {
@@ -175,7 +191,10 @@ export default function CheckoutPage() {
 
     // Record launch on backend
     try {
-      await fetch(`/api/orders/${order.orderId}/launch`, { method: "POST" });
+      await fetch(`/api/orders/${order.orderId}/launch`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
     } catch (err) {
       console.warn("Failed to record launch on server:", err);
     }
@@ -203,6 +222,7 @@ export default function CheckoutPage() {
     try {
       const res = await fetch(`/api/orders/${order.orderId}/return`, {
         method: "POST",
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         const data = await res.json();
@@ -221,7 +241,10 @@ export default function CheckoutPage() {
     try {
       const res = await fetch(`/api/orders/${order.orderId}/utr`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ utr }),
       });
       if (res.ok) {

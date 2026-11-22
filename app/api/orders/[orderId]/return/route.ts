@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { recordPaymentReturn, updateTelegramMessageMeta } from "@/lib/db";
+import { recordPaymentReturn, getOrder, updateTelegramMessageMeta } from "@/lib/db";
 import { sendVerificationNotification } from "@/lib/telegram";
+import { isValidAdminSecret } from "@/lib/auth";
 
 export async function POST(
   req: NextRequest,
@@ -12,6 +13,21 @@ export async function POST(
       return NextResponse.json({ error: "Missing order ID" }, { status: 400 });
     }
 
+    const current = await getOrder(orderId);
+    if (!current) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Verify customer ownership or admin
+    const customerUid = req.headers.get("x-customer-uid");
+    const adminSecret = req.headers.get("x-admin-secret");
+    const isOwner = Boolean(current.customerUid && customerUid === current.customerUid);
+    const isAdmin = isValidAdminSecret(adminSecret);
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ error: "Access denied." }, { status: 403 });
+    }
+
     const result = await recordPaymentReturn(orderId);
     if (!result) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -19,7 +35,7 @@ export async function POST(
 
     const { order, isFirstReturn } = result;
 
-    // Send Telegram alert on return only if not already sent upon creation
+    // Send Telegram alert on return if not already sent
     if (isFirstReturn && order.status === "VERIFICATION_PENDING" && !order.telegramMessageId) {
       try {
         const tgResult = await sendVerificationNotification(order);
@@ -28,7 +44,6 @@ export async function POST(
         }
       } catch (tgErr) {
         console.error("[Return Route] Error sending Telegram alert:", tgErr);
-        // Do not fail customer flow if Telegram fails
       }
     }
 

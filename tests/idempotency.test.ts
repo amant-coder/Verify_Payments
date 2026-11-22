@@ -80,6 +80,28 @@ describe("Return Detection & Idempotency", () => {
     expect(returnPostDecision?.isFirstReturn).toBe(false);
   });
 
+  it("blocks approval while order is still AWAITING_PAYMENT, but allows rejection", async () => {
+    const order: PaymentOrder = {
+      orderId: "ORD-UNVERIFIED",
+      customerUid: "cust_unver",
+      amountPaise: 20000,
+      currency: "INR",
+      status: "AWAITING_PAYMENT",
+      createdAt: new Date().toISOString(),
+    };
+    await createOrder(order);
+
+    // Premature approval must be blocked
+    const decApproved = await recordOrderDecision("ORD-UNVERIFIED", "APPROVED", "AdminUser", "ADMIN");
+    expect(decApproved.success).toBe(false);
+    expect(decApproved.error).toContain("Cannot approve order while awaiting payment");
+
+    // Rejection of abandoned/unpaid order is permitted
+    const decRejected = await recordOrderDecision("ORD-UNVERIFIED", "REJECTED", "AdminUser", "ADMIN");
+    expect(decRejected.success).toBe(true);
+    expect(decRejected.order?.status).toBe("REJECTED");
+  });
+
   it("updates customer UTR without modifying verification timestamps", async () => {
     const order: PaymentOrder = {
       orderId: "ORD-UTR",
