@@ -19,8 +19,8 @@ export async function POST(
 
     const { order, isFirstReturn } = result;
 
-    // Send Telegram alert ONLY on the first return to guarantee idempotency
-    if (isFirstReturn && order.status === "VERIFICATION_PENDING") {
+    // Send Telegram alert on return only if not already sent upon creation
+    if (isFirstReturn && order.status === "VERIFICATION_PENDING" && !order.telegramMessageId) {
       try {
         const tgResult = await sendVerificationNotification(order);
         if (tgResult.success && tgResult.messageId && tgResult.chatId) {
