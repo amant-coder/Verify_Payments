@@ -34,6 +34,7 @@ export default function AdminDashboardPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.orders) setOrders(data.orders);
+        setActionMessage(null);
       } else if (res.status === 401) {
         setActionMessage("Unauthorized. Please check your Admin Secret.");
         setOrders([]);
@@ -147,8 +148,8 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs">
-            <Key className="w-3.5 h-3.5 text-slate-400" />
+          <div className="flex items-center space-x-1.5 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs shadow-sm focus-within:ring-2 focus-within:ring-blue-500">
+            <Key className="w-3.5 h-3.5 text-slate-500" />
             <input
               type="password"
               value={adminSecret}
@@ -159,8 +160,8 @@ export default function AdminDashboardPage() {
                 }
               }}
               placeholder="Admin Secret"
-              className="w-24 focus:outline-none text-xs font-mono"
-              title="Admin Secret Key"
+              className="w-32 focus:outline-none text-xs font-mono"
+              title="Enter your ADMIN_SECRET_KEY"
             />
           </div>
 
